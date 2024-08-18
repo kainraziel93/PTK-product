@@ -72,7 +72,7 @@ class ProductServiceApplicationTests {
 	        assertTrue(savedProduct.isPresent());
 	        assertEquals("Product1", savedProduct.get().getName());
 	    }
-
+	
 	    @Test
 	    void testUpdateProduct() {
 	        Product product = new Product("Product1", "Description1", 10, 99.99);
@@ -103,6 +103,15 @@ class ProductServiceApplicationTests {
 	        Optional<Product> deletedProduct = productRepo.findById(product.getId());
 	        assertTrue(deletedProduct.isEmpty());
 	    }
+	    
+	    @Test
+	    void FailedtestDeleteProduct() {
+
+
+	        ResponseEntity<Map<String, String>> response = productServices.deleteProduct(-1);
+
+	        assertTrue(response.getStatusCode().is4xxClientError());
+	    }
 
 	    @Test
 	    void testProductById() {
@@ -114,6 +123,15 @@ class ProductServiceApplicationTests {
 	        assertEquals(HttpStatus.OK, response.getStatusCode());
 	        assertNotNull(response.getBody());
 	        assertEquals("Product1", response.getBody().getName());
+	    }
+	    
+	    @Test
+	    void FailedProductById() {
+
+
+	        ResponseEntity<Product> response = productServices.productById(-1);
+
+	        assertTrue(response.getStatusCode().is4xxClientError());
 	    }
 
 	    @Test
