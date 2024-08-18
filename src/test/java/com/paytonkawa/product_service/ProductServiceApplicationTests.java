@@ -1,31 +1,52 @@
 package com.paytonkawa.product_service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.hasSize;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paytonkawa.product_service.controller.ProductController;
 import com.paytonkawa.product_service.entity.Product;
 import com.paytonkawa.product_service.repo.ProductRepo;
 import com.paytonkawa.product_service.services.ProductServices;
 
 @SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 class ProductServiceApplicationTests {
 
-	 @Autowired
+	    @Autowired
 	    private ProductRepo productRepo;
-
 	    private ProductServices productServices;
-
+	    @Autowired
+	    private ObjectMapper objectMapper;
+	    @Autowired
+	    private MockMvc mockMvc;
 	    
 	    @Test
 	    void testMainMethod() {
@@ -110,5 +131,67 @@ class ProductServiceApplicationTests {
 	        System.out.println("/////////////////////////////////////=>"+response.getBody());
 	        assertEquals(2, response.getBody().size());
 	    }
+	    
+	    
+	    //Testing controller
+	    
+	    @Test
+	    void testCreateProductController() throws Exception {
+	        Product product = new Product("testProduct", "testProduct", 10,10);
 
+	        mockMvc.perform(post("/product")
+	                .contentType(MediaType.APPLICATION_JSON)
+	                .content(objectMapper.writeValueAsString(product)))
+	                .andExpect(status().isOk())
+	                .andExpect(jsonPath("$.message").value("product"+product.getName()+" saved succefully"));
+
+	        // Verify customer is saved in the repository
+	        assertEquals(1, productRepo.count());
+	    }
+
+	    @Test
+	    void testGetProductByIdController() throws Exception {
+	        Product product = new Product("testProduct", "testProduct", 10,10);
+	        Product savedProduct = productRepo.save(product);
+
+	        mockMvc.perform(get("/product/{id}", savedProduct.getId()))
+	                .andExpect(status().isOk())
+	                .andExpect(jsonPath("$.name").value("testProduct"))
+	                .andExpect(jsonPath("$.description").value("testProduct"))
+	                .andExpect(jsonPath("$.stock").value(10))
+	                .andExpect(jsonPath("$.price").value(10));
+	    }
+	    /*
+	     @Test
+	    void testUpdateCustomerController() throws Exception {
+	        Product product = new Product("testProduct", "testProduct", 10,10);
+	        Product savedProduct = productRepo.save(product);
+
+	        Product updatedProduct = new Product("testProduct", "testProduct", 15,10);
+
+	        mockMvc.perform(put("/customer/{id}", savedProduct.getId())
+	                .contentType(MediaType.APPLICATION_JSON)
+	                .content(objectMapper.writeValueAsString(updatedProduct))
+	                .andExpect(status().isOk())
+	                .andExpect(jsonPath("$.message").value("customer with email jane.doe@example.com updated succefully"));
+
+	        // Verify that the customer is updated in the repository
+	        Customer foundCustomer = customerRepo.findById(savedCustomer.getId()).get();
+	        assertEquals("Jane", foundCustomer.getFirstname());
+	        assertEquals("jane.doe@example.com", foundCustomer.getEmail());
+	    }*/
+	    
+	    
+	    @Test
+	    void testDeleteCustomerController() throws Exception {
+	    	Product product = new Product("testProduct", "testProduct", 10,10);
+	        Product savedProduct = productRepo.save(product);
+	        mockMvc.perform(delete("/product/{id}", savedProduct.getId())
+	                .contentType(MediaType.APPLICATION_JSON)) 
+	                .andExpect(status().isOk())
+	                .andExpect(jsonPath("$.message").value("product with product name "+product.getName()+" deleted succefully"));
+	        Optional<Product> deletedProduct = productRepo.findById(savedProduct.getId());
+	        assertFalse(deletedProduct.isPresent());
+	    }
+	    
 }
