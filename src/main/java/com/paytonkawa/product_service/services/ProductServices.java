@@ -14,9 +14,15 @@ import java.util.List;
 @Service
 public class ProductServices {
 
-	@Autowired
 	private ProductRepo productRepo;
 	
+	
+	
+	public ProductServices(ProductRepo productRepo) {
+		super();
+		this.productRepo = productRepo;
+	}
+
 	public ResponseEntity<Map<String, String>> createProduct (Product product){
 		try {
 			this.productRepo.save(product);
