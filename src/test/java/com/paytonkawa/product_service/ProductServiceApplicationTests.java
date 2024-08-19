@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -15,11 +14,8 @@ import static org.hamcrest.Matchers.hasSize;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -88,6 +84,17 @@ class ProductServiceApplicationTests {
 	        assertEquals("UpdatedName", foundProduct.getName());
 	        assertEquals(89.99, foundProduct.getPrice());
 	        assertEquals(10, foundProduct.getStock()); // Stock should not change since it was set to 0 in the update
+	    }
+	    
+	    @Test
+	    void testFailedProductUpdate() {
+	        Product product = new Product("Product1", "Description1", 10, 99.99);
+	        productRepo.save(product);
+
+	        Product updatedProduct = new Product("UpdatedName", null, 0, 89.99);
+	        ResponseEntity<Map<String, String>> response = productServices.updateProduct(-1, updatedProduct);
+
+	        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 	    }
 
 	    @Test
@@ -179,25 +186,37 @@ class ProductServiceApplicationTests {
 	                .andExpect(jsonPath("$.stock").value(10))
 	                .andExpect(jsonPath("$.price").value(10));
 	    }
-	    /*
+	    
 	     @Test
 	    void testUpdateCustomerController() throws Exception {
 	        Product product = new Product("testProduct", "testProduct", 10,10);
 	        Product savedProduct = productRepo.save(product);
 
-	        Product updatedProduct = new Product("testProduct", "testProduct", 15,10);
+	        Product updatedProduct = new Product("testProduct", "testProduct2", 15,10);
 
-	        mockMvc.perform(put("/customer/{id}", savedProduct.getId())
+	        mockMvc.perform(put("/product/{id}", savedProduct.getId())
 	                .contentType(MediaType.APPLICATION_JSON)
-	                .content(objectMapper.writeValueAsString(updatedProduct))
+	                .content(objectMapper.writeValueAsString(updatedProduct)))
 	                .andExpect(status().isOk())
-	                .andExpect(jsonPath("$.message").value("customer with email jane.doe@example.com updated succefully"));
+	                .andExpect(jsonPath("$.message").value("product with product name "+product.getName()+" updated succefully"));
 
-	        // Verify that the customer is updated in the repository
-	        Customer foundCustomer = customerRepo.findById(savedCustomer.getId()).get();
-	        assertEquals("Jane", foundCustomer.getFirstname());
-	        assertEquals("jane.doe@example.com", foundCustomer.getEmail());
-	    }*/
+	        Product foundProduct = productRepo.findById(savedProduct.getId()).get();
+	        assertEquals("testProduct", foundProduct.getName());
+	        assertEquals("testProduct2", foundProduct.getDescription());
+	        assertEquals(15, foundProduct.getStock());
+	        assertEquals(10, foundProduct.getPrice());
+	    }
+	     
+	     @Test
+	    void testUpdateCustomerControllerFailed() throws Exception {
+
+	        mockMvc.perform(put("/product/{id}", -1)
+	                .contentType(MediaType.APPLICATION_JSON)
+	                .content(objectMapper.writeValueAsString(null)))
+	                .andExpect(status().is4xxClientError());
+
+
+	    }
 	    
 	    
 	    @Test
@@ -210,6 +229,14 @@ class ProductServiceApplicationTests {
 	                .andExpect(jsonPath("$.message").value("product with product name "+product.getName()+" deleted succefully"));
 	        Optional<Product> deletedProduct = productRepo.findById(savedProduct.getId());
 	        assertFalse(deletedProduct.isPresent());
+	    }
+	    
+	    @Test
+	    void testDeleteCustomerControllerFailed() throws Exception {
+	        mockMvc.perform(delete("/product/{id}", -1)
+	                .contentType(MediaType.APPLICATION_JSON)) 
+	                .andExpect(status().is4xxClientError());
+
 	    }
 	    
 }
