@@ -41,13 +41,13 @@ public class ProductController {
 		return this.productServices.createProduct(product);
 	}
 	
-    @Operation(summary = "update a customer", description = "update a customer the provided id  and details if it exist in the database")
+    @Operation(summary = "update a product", description = "update a product the provided id  and details if it exist in the database")
 	@PutMapping("{id}")
 	public ResponseEntity<Map<String,String>> updateCustomer(@PathVariable int id,@RequestBody Product productToUpdate){
 		return this.productServices.updateProduct(id, productToUpdate);
 	}
     
-    @Operation(summary = "update a customer", description = "update a customer the provided id  and details if it exist in the database")
+    @Operation(summary = "delete a product", description = "update a product the provided id  and details if it exist in the database")
 	@DeleteMapping("{id}")
 	public ResponseEntity<Map<String,String>> deleteCustomer(@PathVariable int id){
 		return this.productServices.deleteProduct(id);

@@ -25,7 +25,6 @@ public class Product {
 	@NotBlank(message="you should asign a price to the product")
 	private double price;
 	private LocalDateTime createdAt;
-	
 	public Product() {
 		this.createdAt = LocalDateTime.now();
 	}
@@ -54,6 +53,9 @@ public class Product {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+
+	
+
 
 	public int getStock() {
 		return stock;
