@@ -18,8 +18,8 @@ jobs:
       db:
         image: mysql:5.7
         env:
-          MYSQL_ROOT_PASSWORD: 1234
-          MYSQL_DATABASE: product_service
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
         ports:
           - 3306:3306
 
@@ -45,11 +45,11 @@ jobs:
         fi
     - name: Build Docker Image
       run: |
-        docker build -t raziel1993/ptk:latest .
+        docker build -t raziel1993/ptk:product .
 
     - name: Log in to Docker Hub
       run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
     - name: Push Docker Image
       run: |
-        docker push raziel1993/ptk:latest 
+        docker push raziel1993/ptk:product 
