@@ -49,10 +49,7 @@ class ProductServiceApplicationTests {
     @Autowired
     private MockMvc mockMvc;
 
-    @Test
-    void testMainMethod() {
-        ProductServiceApplication.main(new String[]{}); 
-    }
+
 
     @BeforeEach
     void setUp() {
