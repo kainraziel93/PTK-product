@@ -76,12 +76,10 @@ public class ProductServices {
 	}
 	
 	public ResponseEntity<List<Product>> getAllProducts(){
-		try {
+
 			List<Product> products = this.productRepo.findAll();
 			return ResponseEntity.ok(products);
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().build();
-		}
+
 	}
 	
 	@KafkaListener(topics="update_stock",groupId="1",containerFactory = "kafkaListnerContainerFactory")
