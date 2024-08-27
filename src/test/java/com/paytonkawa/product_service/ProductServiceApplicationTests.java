@@ -53,7 +53,7 @@ class ProductServiceApplicationTests {
 
     @BeforeEach
     void setUp() {
-        productRepo.deleteAll();
+        productRepo.deleteAll(); 
     }
 
     @Test
