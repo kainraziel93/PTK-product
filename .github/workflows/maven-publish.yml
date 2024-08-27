@@ -43,3 +43,13 @@ jobs:
           echo "Code coverage is below 95%! Coverage: $COVERAGE%"
           exit 1
         fi
+    - name: Build Docker Image
+      run: |
+        docker build -t raziel1993/ptk:latest .
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+    - name: Push Docker Image
+      run: |
+        docker push raziel1993/ptk:latest 
