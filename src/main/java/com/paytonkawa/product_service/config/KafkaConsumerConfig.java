@@ -21,6 +21,8 @@ import com.paytonkawa.product_service.dto.UpdateProductStockDto;
 public class KafkaConsumerConfig {
 	@Value("${kafka.topic}")
 	private String kafkaTopic;
+	@Value("${kafka.server.host}")
+	private String kafkaHost;
 	@Bean
 	public NewTopic topic() {
 		return TopicBuilder.name(kafkaTopic).build();
@@ -28,7 +30,7 @@ public class KafkaConsumerConfig {
 	
 	public Map<String,Object> ConsumerConfiguration(){
 		Map<String,Object> config = new HashMap<String,Object>();
-		config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,"localhost:9092");
+		config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,kafkaHost);
 		config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,StringDeserializer.class);
 		config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,org.springframework.kafka.support.serializer.JsonDeserializer.class);
 		config.put(JsonDeserializer.TRUSTED_PACKAGES,"*");

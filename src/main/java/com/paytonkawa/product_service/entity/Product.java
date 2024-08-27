@@ -28,6 +28,9 @@ public class Product {
 	public Product() {
 		this.createdAt = LocalDateTime.now();
 	}
+	public void setId(int id) {
+		this.id = id;
+	}
 
 	public Product(String name, String description, int stock, double price) {
 		super();

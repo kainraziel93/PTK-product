@@ -89,5 +89,6 @@ public class ProductServices {
 		System.out.println("updating product  with the =>"+updateProductMessage.getProductId()+" stock removing  a quantity of=>"+updateProductMessage.getQuantity()+" ....");
 		Product product = productRepo.findById(updateProductMessage.getProductId()).get();
 		product.setStock(product.getStock()-updateProductMessage.getQuantity());
+		this.productRepo.save(product);
 	}
 }

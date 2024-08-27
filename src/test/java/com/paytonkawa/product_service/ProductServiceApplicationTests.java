@@ -10,10 +10,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.Matchers.hasSize;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.paytonkawa.product_service.controller.ProductController;
+import com.paytonkawa.product_service.dto.UpdateProductStockDto;
 import com.paytonkawa.product_service.entity.Product;
 import com.paytonkawa.product_service.repo.ProductRepo;
 import com.paytonkawa.product_service.services.ProductServices;
@@ -36,207 +37,239 @@ import com.paytonkawa.product_service.services.ProductServices;
 @ActiveProfiles("test")
 class ProductServiceApplicationTests {
 
-	    @Autowired
-	    private ProductRepo productRepo;
-	    private ProductServices productServices;
-	    @Autowired
-	    private ObjectMapper objectMapper;
-	    @Autowired
-	    private MockMvc mockMvc;
-	    
-	    @Test
-	    void testMainMethod() {
-	        ProductServiceApplication.main(new String[]{}); 
-	    }
-	    
-	    @BeforeEach
-	    void setUp() {
-	        this.productServices = new ProductServices(productRepo);
-	        productRepo.deleteAll();
-	    }
+    @Autowired
+    private ProductRepo productRepo;
 
-	    @Test
-	    void testCreateProduct() {
-	        Product product = new Product("Product1", "Description1", 10, 99.99);
-	        ResponseEntity<Map<String, String>> response = productServices.createProduct(product);
+    @Autowired
+    private ProductServices productServices;
 
-	        assertEquals(HttpStatus.OK, response.getStatusCode());
-	        assertTrue(response.getBody().containsKey("message"));
-	        assertEquals("productProduct1 saved succefully", response.getBody().get("message"));
+    @Autowired
+    private ObjectMapper objectMapper;
 
-	        Optional<Product> savedProduct = productRepo.findById(product.getId());
-	        assertTrue(savedProduct.isPresent());
-	        assertEquals("Product1", savedProduct.get().getName());
-	    }
-	
-	    @Test
-	    void testUpdateProduct() {
-	        Product product = new Product("Product1", "Description1", 10, 99.99);
-	        productRepo.save(product);
+    @Autowired
+    private MockMvc mockMvc;
 
-	        Product updatedProduct = new Product("UpdatedName", null, 0, 89.99);
-	        ResponseEntity<Map<String, String>> response = productServices.updateProduct(product.getId(), updatedProduct);
+    @Test
+    void testMainMethod() {
+        ProductServiceApplication.main(new String[]{}); 
+    }
 
-	        assertEquals(HttpStatus.OK, response.getStatusCode());
-	        assertEquals("product with product name UpdatedName updated succefully", response.getBody().get("message"));
+    @BeforeEach
+    void setUp() {
+        productRepo.deleteAll();
+    }
 
-	        Product foundProduct = productRepo.findById(product.getId()).get();
-	        assertEquals("UpdatedName", foundProduct.getName());
-	        assertEquals(89.99, foundProduct.getPrice());
-	        assertEquals(10, foundProduct.getStock()); // Stock should not change since it was set to 0 in the update
-	    }
-	    
-	    @Test
-	    void testFailedProductUpdate() {
-	        Product product = new Product("Product1", "Description1", 10, 99.99);
-	        productRepo.save(product);
+    @Test
+    void testCreateProduct() {
+        Product product = new Product("Product1", "Description1", 10, 99.99);
+        ResponseEntity<Map<String, String>> response = productServices.createProduct(product);
 
-	        Product updatedProduct = new Product("UpdatedName", null, 0, 89.99);
-	        ResponseEntity<Map<String, String>> response = productServices.updateProduct(-1, updatedProduct);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody().containsKey("message"));
+        assertEquals("productProduct1 saved succefully", response.getBody().get("message"));
 
-	        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-	    }
-
-	    @Test
-	    void testDeleteProduct() {
-	        Product product = new Product("Product1", "Description1", 10, 99.99);
-	        productRepo.save(product);
-
-	        ResponseEntity<Map<String, String>> response = productServices.deleteProduct(product.getId());
-
-	        assertEquals(HttpStatus.OK, response.getStatusCode());
-	        assertEquals("product with product name Product1 deleted succefully", response.getBody().get("message"));
-
-	        Optional<Product> deletedProduct = productRepo.findById(product.getId());
-	        assertTrue(deletedProduct.isEmpty());
-	    }
-	    
-	    @Test
-	    void FailedtestDeleteProduct() {
+        Optional<Product> savedProduct = productRepo.findById(product.getId());
+        assertTrue(savedProduct.isPresent());
+        assertEquals("Product1", savedProduct.get().getName());
+    }
 
 
-	        ResponseEntity<Map<String, String>> response = productServices.deleteProduct(-1);
+    @Test
+    void testUpdateProduct() {
+        Product product = new Product("Product1", "Description1", 10, 99.99);
+        productRepo.save(product);
 
-	        assertTrue(response.getStatusCode().is4xxClientError());
-	    }
+        Product updatedProduct = new Product("UpdatedName", null, 0, 89.99);
+        ResponseEntity<Map<String, String>> response = productServices.updateProduct(product.getId(), updatedProduct);
 
-	    @Test
-	    void testProductById() {
-	        Product product = new Product("Product1", "Description1", 10, 99.99);
-	        productRepo.save(product);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("product with product name UpdatedName updated succefully", response.getBody().get("message"));
 
-	        ResponseEntity<Product> response = productServices.productById(product.getId());
+        Product foundProduct = productRepo.findById(product.getId()).get();
+        assertEquals("UpdatedName", foundProduct.getName());
+        assertEquals(89.99, foundProduct.getPrice());
+        assertEquals(10, foundProduct.getStock()); // Stock should not change since it was set to 0 in the update
+    }
 
-	        assertEquals(HttpStatus.OK, response.getStatusCode());
-	        assertNotNull(response.getBody());
-	        assertEquals("Product1", response.getBody().getName());
-	    }
-	    
-	    @Test
-	    void FailedProductById() {
+    @Test
+    void testFailedProductUpdate() {
+        Product product = new Product("Product1", "Description1", 10, 99.99);
+        productRepo.save(product);
 
+        Product updatedProduct = new Product("UpdatedName", null, 0, 89.99);
+        ResponseEntity<Map<String, String>> response = productServices.updateProduct(-1, updatedProduct);
 
-	        ResponseEntity<Product> response = productServices.productById(-1);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
 
-	        assertTrue(response.getStatusCode().is4xxClientError());
-	    }
+    @Test
+    void testDeleteProduct() {
+        Product product = new Product("Product1", "Description1", 10, 99.99);
+        productRepo.save(product);
 
-	    @Test
-	    void testGetAllProducts() {
-	        Product product1 = new Product("Product1", "Description1", 10, 99.99);
-	        Product product2 = new Product("Product2", "Description2", 20, 199.99);
+        ResponseEntity<Map<String, String>> response = productServices.deleteProduct(product.getId());
 
-	        productRepo.save(product1);
-	        productRepo.save(product2);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("product with product name Product1 deleted succefully", response.getBody().get("message"));
 
-	        ResponseEntity<List<Product>> response = productServices.getAllProducts();
+        Optional<Product> deletedProduct = productRepo.findById(product.getId());
+        assertTrue(deletedProduct.isEmpty());
+    }
 
-	        assertEquals(HttpStatus.OK, response.getStatusCode());
-	        assertNotNull(response.getBody());
-	        System.out.println("/////////////////////////////////////=>"+response.getBody());
-	        assertEquals(2, response.getBody().size());
-	    }
-	    
-	    
-	    //Testing controller
-	    
-	    @Test
-	    void testCreateProductController() throws Exception {
-	        Product product = new Product("testProduct", "testProduct", 10,10);
+    @Test
+    void FailedtestDeleteProduct() {
+        ResponseEntity<Map<String, String>> response = productServices.deleteProduct(-1);
 
-	        mockMvc.perform(post("/product")
-	                .contentType(MediaType.APPLICATION_JSON)
-	                .content(objectMapper.writeValueAsString(product)))
-	                .andExpect(status().isOk())
-	                .andExpect(jsonPath("$.message").value("product"+product.getName()+" saved succefully"));
+        assertTrue(response.getStatusCode().is4xxClientError());
+    }
 
-	        // Verify customer is saved in the repository
-	        assertEquals(1, productRepo.count());
-	    }
+    @Test
+    void testProductById() {
+        Product product = new Product("Product1", "Description1", 10, 99.99);
+        productRepo.save(product);
 
-	    @Test
-	    void testGetProductByIdController() throws Exception {
-	        Product product = new Product("testProduct", "testProduct", 10,10);
-	        Product savedProduct = productRepo.save(product);
+        ResponseEntity<Product> response = productServices.productById(product.getId());
 
-	        mockMvc.perform(get("/product/{id}", savedProduct.getId()))
-	                .andExpect(status().isOk())
-	                .andExpect(jsonPath("$.name").value("testProduct"))
-	                .andExpect(jsonPath("$.description").value("testProduct"))
-	                .andExpect(jsonPath("$.stock").value(10))
-	                .andExpect(jsonPath("$.price").value(10));
-	    }
-	    
-	     @Test
-	    void testUpdateCustomerController() throws Exception {
-	        Product product = new Product("testProduct", "testProduct", 10,10);
-	        Product savedProduct = productRepo.save(product);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Product1", response.getBody().getName());
+    }
 
-	        Product updatedProduct = new Product("testProduct", "testProduct2", 15,10);
+    @Test
+    void FailedProductById() {
+        ResponseEntity<Product> response = productServices.productById(-1);
 
-	        mockMvc.perform(put("/product/{id}", savedProduct.getId())
-	                .contentType(MediaType.APPLICATION_JSON)
-	                .content(objectMapper.writeValueAsString(updatedProduct)))
-	                .andExpect(status().isOk())
-	                .andExpect(jsonPath("$.message").value("product with product name "+product.getName()+" updated succefully"));
+        assertTrue(response.getStatusCode().is4xxClientError());
+    }
 
-	        Product foundProduct = productRepo.findById(savedProduct.getId()).get();
-	        assertEquals("testProduct", foundProduct.getName());
-	        assertEquals("testProduct2", foundProduct.getDescription());
-	        assertEquals(15, foundProduct.getStock());
-	        assertEquals(10, foundProduct.getPrice());
-	    }
-	     
-	     @Test
-	    void testUpdateCustomerControllerFailed() throws Exception {
+    @Test
+    void testGetAllProducts() {
+        Product product1 = new Product("Product1", "Description1", 10, 99.99);
+        Product product2 = new Product("Product2", "Description2", 20, 199.99);
 
-	        mockMvc.perform(put("/product/{id}", -1)
-	                .contentType(MediaType.APPLICATION_JSON)
-	                .content(objectMapper.writeValueAsString(null)))
-	                .andExpect(status().is4xxClientError());
+        productRepo.save(product1);
+        productRepo.save(product2);
 
+        ResponseEntity<List<Product>> response = productServices.getAllProducts();
 
-	    }
-	    
-	    
-	    @Test
-	    void testDeleteCustomerController() throws Exception {
-	    	Product product = new Product("testProduct", "testProduct", 10,10);
-	        Product savedProduct = productRepo.save(product);
-	        mockMvc.perform(delete("/product/{id}", savedProduct.getId())
-	                .contentType(MediaType.APPLICATION_JSON)) 
-	                .andExpect(status().isOk())
-	                .andExpect(jsonPath("$.message").value("product with product name "+product.getName()+" deleted succefully"));
-	        Optional<Product> deletedProduct = productRepo.findById(savedProduct.getId());
-	        assertFalse(deletedProduct.isPresent());
-	    }
-	    
-	    @Test
-	    void testDeleteCustomerControllerFailed() throws Exception {
-	        mockMvc.perform(delete("/product/{id}", -1)
-	                .contentType(MediaType.APPLICATION_JSON)) 
-	                .andExpect(status().is4xxClientError());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(2, response.getBody().size());
+    }
 
-	    }
-	    
+    // Testing controller
+
+    @Test
+    void testCreateProductController() throws Exception {
+        Product product = new Product("testProduct", "testProduct", 10, 10);
+
+        mockMvc.perform(post("/product")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(product)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("product" + product.getName() + " saved succefully"));
+
+        // Verify product is saved in the repository
+        assertEquals(1, productRepo.count());
+    }
+
+    @Test
+    void testGetProductByIdController() throws Exception {
+        Product product = new Product("testProduct", "testProduct", 10, 10);
+        Product savedProduct = productRepo.save(product);
+
+        mockMvc.perform(get("/product/{id}", savedProduct.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("testProduct"))
+                .andExpect(jsonPath("$.description").value("testProduct"))
+                .andExpect(jsonPath("$.stock").value(10))
+                .andExpect(jsonPath("$.price").value(10));
+    }
+
+    @Test
+    void testUpdateProductController() throws Exception {
+        Product product = new Product("testProduct", "testProduct", 10, 10);
+        Product savedProduct = productRepo.save(product);
+
+        Product updatedProduct = new Product("testProduct", "testProduct2", 15, 10);
+
+        mockMvc.perform(put("/product/{id}", savedProduct.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatedProduct)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("product with product name " + product.getName() + " updated succefully"));
+
+        Product foundProduct = productRepo.findById(savedProduct.getId()).get();
+        assertEquals("testProduct", foundProduct.getName());
+        assertEquals("testProduct2", foundProduct.getDescription());
+        assertEquals(15, foundProduct.getStock());
+        assertEquals(10, foundProduct.getPrice());
+    }
+
+    @Test
+    void testUpdateProductControllerFailed() throws Exception {
+        mockMvc.perform(put("/product/{id}", -1)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(null)))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void testDeleteProductController() throws Exception {
+        Product product = new Product("testProduct", "testProduct", 10, 10);
+        Product savedProduct = productRepo.save(product);
+
+        mockMvc.perform(delete("/product/{id}", savedProduct.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("product with product name " + product.getName() + " deleted succefully"));
+
+        Optional<Product> deletedProduct = productRepo.findById(savedProduct.getId());
+        assertFalse(deletedProduct.isPresent());
+    }
+
+    @Test
+    void testDeleteProductControllerFailed() throws Exception {
+        mockMvc.perform(delete("/product/{id}", -1)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is4xxClientError());
+    }
+    
+    @Test
+    void testUpdateProductStockDto() {
+        UpdateProductStockDto dtoDefault = new UpdateProductStockDto();
+        dtoDefault.setProductId(1);
+        dtoDefault.setQuantity(100);
+        assertEquals(1, dtoDefault.getProductId());
+        assertEquals(100, dtoDefault.getQuantity());
+        UpdateProductStockDto dtoParameterized = new UpdateProductStockDto(2, 200);  
+        assertEquals(2, dtoParameterized.getProductId());
+        assertEquals(200, dtoParameterized.getQuantity());
+        String expectedString = "UpdateProductStockDto [productId=2, quantity=200]";
+        assertEquals(expectedString, dtoParameterized.toString());
+    }
+    
+    @Test
+    void testToStringMethodProduct() {
+    	Product product = new Product("testProduct1","product test description for product 1",45,10);
+    	String expectedString =  "Product [id=" + product.getId() + ", name=" + product.getName() + ", description=" + product.getDescription() + ", stock=" + product.getStock() + ", price="
+				+ product.getPrice() + ", createdAt=" + product.getCreatedAt() + "]";
+        assertEquals(expectedString, product.toString());
+    	
+    }
+
+    @Test
+    void testGetAllProductsController() throws Exception {
+        Product product1 = new Product("Product1", "Description1", 10, 99.99);
+        Product product2 = new Product("Product2", "Description2", 20, 199.99);
+
+        productRepo.save(product1);
+        productRepo.save(product2);
+
+        mockMvc.perform(get("/product"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].name").value("Product1"))
+                .andExpect(jsonPath("$[1].name").value("Product2"));
+    }
 }
