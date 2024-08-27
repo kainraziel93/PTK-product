@@ -3,9 +3,12 @@ package com.paytonkawa.product_service.services;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import com.paytonkawa.product_service.dto.UpdateProductStockDto;
 import com.paytonkawa.product_service.entity.Product;
 import com.paytonkawa.product_service.repo.ProductRepo;
 
@@ -14,15 +17,8 @@ import java.util.List;
 @Service
 public class ProductServices {
 
+	@Autowired
 	private ProductRepo productRepo;
-	
-	
-	
-	public ProductServices(ProductRepo productRepo) {
-		super();
-		this.productRepo = productRepo;
-	}
-
 	public ResponseEntity<Map<String, String>> createProduct (Product product){
 		try {
 			this.productRepo.save(product);
@@ -86,5 +82,12 @@ public class ProductServices {
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().build();
 		}
+	}
+	
+	@KafkaListener(topics="update_stock",groupId="1",containerFactory = "kafkaListnerContainerFactory")
+	public void updateStock(UpdateProductStockDto updateProductMessage) {
+		System.out.println("updating product  with the =>"+updateProductMessage.getProductId()+" stock removing  a quantity of=>"+updateProductMessage.getQuantity()+" ....");
+		Product product = productRepo.findById(updateProductMessage.getProductId()).get();
+		product.setStock(product.getStock()-updateProductMessage.getQuantity());
 	}
 }
